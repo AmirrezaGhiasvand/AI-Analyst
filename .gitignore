@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+
+# Project-specific: local file storage, secrets, and DB
+backend/storage/*
+!backend/storage/.gitkeep
+.env
+*.db
