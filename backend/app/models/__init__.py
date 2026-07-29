@@ -1,0 +1,8 @@
+"""
+Importing models here ensures they're registered on Base.metadata before
+create_all() (or Alembic) runs. Without this, SQLAlchemy wouldn't know
+these tables exist yet.
+"""
+
+from app.models.dataset import Dataset  # noqa: F401
+from app.models.project import Project  # noqa: F401
