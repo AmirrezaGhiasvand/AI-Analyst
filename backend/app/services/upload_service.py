@@ -2,18 +2,20 @@
 Upload service.
 
 Contains the actual business logic for handling a file upload: validation,
-safe storage on disk, and creating the Project/Dataset DB records. Kept
-separate from the API route so this logic is testable and reusable
-(e.g., agents could trigger uploads programmatically later without going
-through HTTP).
+safe storage on disk, profiling, and creating/updating the Project/Dataset
+DB records. Kept separate from the API route so this logic is testable
+and reusable (e.g., agents could trigger uploads programmatically later
+without going through HTTP).
 """
 
+import json
 import uuid
 from pathlib import Path
 
 from app.core.config import settings
 from app.models.dataset import Dataset
 from app.models.project import Project
+from app.services.profiling_service import ProfilingError, profile_dataset
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
@@ -68,7 +70,8 @@ def handle_upload(
     1. Validate it
     2. Reuse an existing project or create a new one
     3. Save the file to disk under a safe generated name
-    4. Create and persist the Dataset record
+    4. Create the Dataset record
+    5. Profile it synchronously and update status accordingly
     """
     raw_bytes = file.file.read()
     size_bytes = len(raw_bytes)
@@ -100,9 +103,27 @@ def handle_upload(
         storage_path=storage_path,
         file_type=ext.lstrip("."),
         size_bytes=size_bytes,
-        status="uploaded",
+        status="profiling",
     )
     db.add(dataset)
+    db.flush()  # assigns relationships without finalizing the transaction
+
+    # Profiling failure should NOT lose the upload — the file is still
+    # saved and the dataset row still exists, just marked as failed with
+    # a reason, so the user can see what went wrong instead of the upload
+    # silently disappearing.
+    try:
+        profile = profile_dataset(dataset)
+        dataset.row_count = profile["row_count"]
+        dataset.column_count = profile["column_count"]
+        dataset.profile_json = json.dumps(
+            {"columns": profile["columns"], "preview_rows": profile["preview_rows"]}
+        )
+        dataset.status = "ready"
+    except ProfilingError as e:
+        dataset.status = "failed"
+        dataset.profiling_error = str(e)
+
     db.commit()
     db.refresh(project)
     db.refresh(dataset)

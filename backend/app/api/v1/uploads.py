@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.dataset import UploadResponse
+from app.schemas.dataset import DatasetRead, ProjectRead, UploadResponse
 from app.services.upload_service import UploadValidationError, handle_upload
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
@@ -38,4 +38,7 @@ def upload_dataset(
         # is the only place that decides "this becomes a 400".
         raise HTTPException(status_code=400, detail=str(e))
 
-    return UploadResponse(project=project, dataset=dataset)
+    return UploadResponse(
+        project=ProjectRead.model_validate(project),
+        dataset=DatasetRead.from_model(dataset),
+    )

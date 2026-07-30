@@ -7,6 +7,7 @@ frontend integrates against, so field names/types here should be treated
 as stable once the frontend starts consuming them.
 """
 
+import json
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -21,11 +22,37 @@ class DatasetRead(BaseModel):
     file_type: str
     size_bytes: int
     status: str
+    row_count: int | None = None
+    column_count: int | None = None
+    profile: dict | None = None
+    profiling_error: str | None = None
     created_at: datetime
 
-    # Lets Pydantic build this model directly from a SQLAlchemy object
-    # (model.id, model.project_id, ...) instead of requiring a dict.
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_model(cls, dataset) -> "DatasetRead":
+        """
+        Builds this schema from a Dataset ORM object, parsing the stored
+        profile_json string into a real dict. Done explicitly here (rather
+        than relying on automatic from_attributes mapping) since the DB
+        column name (profile_json) and API field name (profile) differ,
+        and the DB stores it as a string that needs parsing either way.
+        """
+        profile = json.loads(dataset.profile_json) if dataset.profile_json else None
+        return cls(
+            id=dataset.id,
+            project_id=dataset.project_id,
+            original_filename=dataset.original_filename,
+            file_type=dataset.file_type,
+            size_bytes=dataset.size_bytes,
+            status=dataset.status,
+            row_count=dataset.row_count,
+            column_count=dataset.column_count,
+            profile=profile,
+            profiling_error=dataset.profiling_error,
+            created_at=dataset.created_at,
+        )
 
 
 class ProjectRead(BaseModel):
