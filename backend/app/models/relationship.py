@@ -40,6 +40,13 @@ class DatasetRelationship(Base):
     # thresholded away) so the UI can show "likely" vs "strong" matches.
     confidence: Mapped[float] = mapped_column(Float)
 
+    # "join": a normal foreign-key-style relationship between two
+    # different tables (e.g. orders.customer_id -> customers.id).
+    # "possible_duplicate": nearly every column between the two datasets
+    # matched — a sign these are two overlapping exports of the same
+    # data, not genuinely different tables that should be joined.
+    relationship_type: Mapped[str] = mapped_column(String, default="join")
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

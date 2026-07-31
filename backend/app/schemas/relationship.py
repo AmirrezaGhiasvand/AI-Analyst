@@ -16,6 +16,7 @@ class DatasetRelationshipRead(BaseModel):
     right_dataset_filename: str
     right_column: str
     confidence: float
+    relationship_type: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -36,5 +37,6 @@ class DatasetRelationshipRead(BaseModel):
             right_dataset_filename=rel.right_dataset.original_filename,
             right_column=rel.right_column,
             confidence=rel.confidence,
+            relationship_type=rel.relationship_type,
             created_at=rel.created_at,
         )

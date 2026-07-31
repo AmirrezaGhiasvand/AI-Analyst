@@ -11,6 +11,11 @@ orders.customer_id <-> customers.id), using three signals:
                        This is the strongest signal and the one that
                        catches relationships even when names don't match.
 
+Additionally classifies each matched pair as either a genuine "join"
+(different tables, linked by a shared key) or a "possible_duplicate"
+(nearly every column matched — these look like overlapping exports of
+the same table, not two different tables that should be joined).
+
 Runs after every upload, re-evaluating the whole project, since a newly
 uploaded file might relate to ones already there.
 """
@@ -35,6 +40,13 @@ CANDIDATE_KINDS = {"numeric", "categorical", "text"}
 # that merely have similar names but unrelated data.
 MIN_VALUE_OVERLAP = 0.3
 MIN_CONFIDENCE = 0.5
+
+# If matched columns cover this fraction (or more) of BOTH datasets'
+# candidate columns, treat the whole pair as likely duplicate/overlapping
+# exports rather than a genuine join relationship — e.g. two files with
+# every column matching 1:1 aren't "related tables", they're the same
+# table twice.
+DUPLICATE_COLUMN_OVERLAP_THRESHOLD = 0.8
 
 # Weights for combining signals into one confidence score. Value overlap
 # is weighted higher since it's evidence from the actual data, not just
@@ -130,6 +142,11 @@ def detect_relationships(db: Session, project_id: str) -> list[DatasetRelationsh
         values_a = value_sets_by_dataset[dataset_a.id]
         values_b = value_sets_by_dataset[dataset_b.id]
 
+        # Collect matches for THIS pair only, before deciding whether
+        # they represent a join or a likely duplicate dataset — that
+        # classification depends on how many columns matched overall.
+        pair_matches: list[DatasetRelationship] = []
+
         for col_a, set_a in values_a.items():
             for col_b, set_b in values_b.items():
                 name_sim = _name_similarity(col_a, col_b)
@@ -137,7 +154,7 @@ def detect_relationships(db: Session, project_id: str) -> list[DatasetRelationsh
                 confidence = NAME_WEIGHT * name_sim + OVERLAP_WEIGHT * overlap
 
                 if overlap >= MIN_VALUE_OVERLAP and confidence >= MIN_CONFIDENCE:
-                    detected.append(
+                    pair_matches.append(
                         DatasetRelationship(
                             left_dataset_id=dataset_a.id,
                             left_column=col_a,
@@ -146,6 +163,26 @@ def detect_relationships(db: Session, project_id: str) -> list[DatasetRelationsh
                             confidence=round(confidence, 3),
                         )
                     )
+
+        if not pair_matches:
+            continue
+
+        # Classify: if the matched columns cover most of BOTH datasets'
+        # candidate columns, this looks like two overlapping exports of
+        # the same table, not a genuine join between different tables.
+        matched_left_cols = {m.left_column for m in pair_matches}
+        matched_right_cols = {m.right_column for m in pair_matches}
+        left_ratio = len(matched_left_cols) / len(values_a) if values_a else 0
+        right_ratio = len(matched_right_cols) / len(values_b) if values_b else 0
+
+        is_duplicate = (
+            left_ratio >= DUPLICATE_COLUMN_OVERLAP_THRESHOLD
+            and right_ratio >= DUPLICATE_COLUMN_OVERLAP_THRESHOLD
+        )
+        for match in pair_matches:
+            match.relationship_type = "possible_duplicate" if is_duplicate else "join"
+
+        detected.extend(pair_matches)
 
     db.add_all(detected)
     db.commit()
