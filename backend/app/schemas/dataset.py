@@ -64,6 +64,27 @@ class ProjectRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProjectWithDatasets(BaseModel):
+    """Returned when fetching a single project — includes its datasets
+    so the frontend (and you, for debugging) can see everything in one call."""
+
+    id: str
+    name: str
+    created_at: datetime
+    updated_at: datetime
+    datasets: list[DatasetRead]
+
+    @classmethod
+    def from_model(cls, project) -> "ProjectWithDatasets":
+        return cls(
+            id=project.id,
+            name=project.name,
+            created_at=project.created_at,
+            updated_at=project.updated_at,
+            datasets=[DatasetRead.from_model(d) for d in project.datasets],
+        )
+
+
 class UploadResponse(BaseModel):
     """Returned immediately after a successful upload."""
 

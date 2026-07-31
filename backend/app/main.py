@@ -8,12 +8,13 @@ will register its own router under app/api/v1/ and be wired in here.
 
 from fastapi import FastAPI
 
-from app.api.v1 import uploads
+from app.api.v1 import projects, uploads
 from app.core.config import settings
 
 app = FastAPI(title=settings.app_name)
 
 app.include_router(uploads.router, prefix=settings.api_v1_prefix)
+app.include_router(projects.router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/health")

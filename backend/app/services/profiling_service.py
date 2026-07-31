@@ -31,8 +31,13 @@ class ProfilingError(Exception):
     validation (e.g. a .csv extension on a file that isn't valid CSV)."""
 
 
-def _load_dataframe(dataset: Dataset) -> pd.DataFrame:
-    """Reads the dataset's file into a DataFrame based on its file_type."""
+def load_dataframe(dataset: Dataset) -> pd.DataFrame:
+    """
+    Reads a dataset's file into a DataFrame based on its file_type.
+    Public since both profiling and relationship detection need to read
+    the raw file — kept in one place so there's a single implementation
+    of "how do we parse each supported file type".
+    """
     path = dataset.storage_path
     try:
         if dataset.file_type == "csv":
@@ -70,13 +75,19 @@ def _infer_column_kind(series: pd.Series) -> str:
     if pd.api.types.is_numeric_dtype(series):
         return "numeric"
 
-    # Heuristic: object columns with few unique values relative to row
-    # count are likely categorical (e.g. "status": active/inactive),
-    # rather than free-text.
+    # Heuristic: a column is likely categorical if either (a) it has few
+    # unique values relative to row count, or (b) it has a small absolute
+    # number of unique values AND those values actually repeat across rows
+    # (e.g. "department" with 3 values recurring over many rows). The
+    # repetition check matters — without it, a small sample of an all-
+    # unique text column (e.g. "name") would be wrongly flagged too, since
+    # a handful of names is also "few unique values".
     non_null = series.dropna()
     if len(non_null) > 0:
-        unique_ratio = non_null.nunique() / len(non_null)
-        if unique_ratio < 0.5:
+        unique_count = non_null.nunique()
+        unique_ratio = unique_count / len(non_null)
+        has_repetition = unique_count < len(non_null)
+        if unique_ratio < 0.5 or (unique_count <= 20 and has_repetition):
             return "categorical"
 
     return "text"
@@ -124,7 +135,7 @@ def profile_dataset(dataset: Dataset) -> dict:
     Profiles a dataset and returns a JSON-serializable dict describing it.
     Raises ProfilingError if the file can't be read.
     """
-    df = _load_dataframe(dataset)
+    df = load_dataframe(dataset)
 
     columns = {}
     for col_name in df.columns:

@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.models.dataset import Dataset
 from app.models.project import Project
 from app.services.profiling_service import ProfilingError, profile_dataset
+from app.services.relationship_service import detect_relationships
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
@@ -127,5 +128,20 @@ def handle_upload(
     db.commit()
     db.refresh(project)
     db.refresh(dataset)
+
+    # Relationship detection needs this dataset's profile to already be
+    # committed (it re-reads profile_json), and only makes sense if
+    # profiling actually succeeded. A failure here shouldn't fail the
+    # whole upload — the file is still safely uploaded and profiled either way.
+    if dataset.status == "ready":
+        try:
+            detect_relationships(db, project.id)
+        except Exception:
+            # Relationship detection is a "nice to have" enhancement, not
+            # part of the upload's core guarantee. We deliberately swallow
+            # errors here rather than let a detection bug fail an otherwise
+            # successful upload. Proper logging will replace this silent
+            # pass once we add structured logging in a later section.
+            pass
 
     return project, dataset
