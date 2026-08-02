@@ -98,6 +98,7 @@ def ask_question(db: Session, project_id: str, question: str) -> dict:
         "generated_code": None,
         "execution_result": None,
         "analysis_error": None,
+        "chart_json": None,
         "final_answer": None,
     }
 
@@ -108,12 +109,14 @@ def ask_question(db: Session, project_id: str, question: str) -> dict:
     )
     generated_code = result_state.get("generated_code")
     execution_result = result_state.get("execution_result")
+    chart_json = result_state.get("chart_json")
 
     assistant_message = Message(
         conversation_id=conversation.id,
         role="assistant",
         content=final_answer,
         generated_code=generated_code,
+        chart_json=chart_json,
     )
     db.add(assistant_message)
     db.commit()

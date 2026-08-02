@@ -17,6 +17,7 @@ from langgraph.graph import END, StateGraph
 from app.agents.analyst import analyze
 from app.agents.planner import plan
 from app.agents.state import AgentState
+from app.agents.visualizer import visualize
 
 
 def _route_after_planner(state: AgentState) -> str:
@@ -29,6 +30,7 @@ def build_agent_graph():
 
     builder.add_node("planner", plan)
     builder.add_node("analyst", analyze)
+    builder.add_node("visualizer", visualize)
 
     builder.set_entry_point("planner")
     builder.add_conditional_edges(
@@ -36,7 +38,11 @@ def build_agent_graph():
         _route_after_planner,
         {"analyst": "analyst", "__end__": END},
     )
-    builder.add_edge("analyst", END)
+    # Analyst always flows into the Visualizer — the Visualizer itself
+    # decides (cheaply, via a shape check before even calling the LLM)
+    # whether there's actually anything worth charting.
+    builder.add_edge("analyst", "visualizer")
+    builder.add_edge("visualizer", END)
 
     return builder.compile()
 

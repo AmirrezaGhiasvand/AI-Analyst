@@ -40,5 +40,8 @@ class AgentState(TypedDict):
     execution_result: Any | None
     analysis_error: str | None
 
+    # Set by the Visualizer
+    chart_json: str | None
+
     # Final output
     final_answer: str | None

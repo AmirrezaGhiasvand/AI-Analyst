@@ -24,12 +24,6 @@ def chat(project_id: str, request: ChatRequest, db: Session = Depends(get_db)):
     result = ask_question(db, project_id, request.question)
     message = result["message"]
 
-    return ChatResponse(
-        message_id=message.id,
-        role=message.role,
-        content=message.content,
-        generated_code=message.generated_code,
-        route=result["route"],
-        execution_result=result["execution_result"],
-        created_at=message.created_at,
+    return ChatResponse.from_message(
+        message, route=result["route"], execution_result=result["execution_result"]
     )
