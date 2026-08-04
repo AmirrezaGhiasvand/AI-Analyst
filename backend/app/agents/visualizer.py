@@ -34,18 +34,17 @@ from app.services.llm_client import get_llm_client
 # setting is the actual fix, and only needs to run once.
 pio.templates.default = "none"
 
-SYSTEM_PROMPT = """You decide whether a computed result should be shown \
-as a chart, and if so, what type. Respond with ONLY a JSON object, no \
-markdown fences, in exactly this shape:
+SYSTEM_PROMPT = """You choose the best chart type for a computed result \
+that compares values across categories. Respond with ONLY a JSON object, \
+no markdown fences, in exactly this shape:
 
-{"should_visualize": true or false, "chart_type": "bar" or "line" or "pie" or null, "title": "<short chart title or null>"}
+{"chart_type": "bar" or "line" or "pie", "title": "<short chart title>"}
 
-Use "bar" for comparing values across categories (the most common case). \
-Use "line" only if the categories represent a clear time/sequence order. \
-Use "pie" only for a small number of categories (<=6) showing parts of a whole. \
-Set should_visualize=false for results that don't meaningfully benefit \
-from a chart (e.g. only 2-3 near-identical values, or the question \
-didn't ask for a comparison).
+Use "bar" for comparing values across categories (the most common and \
+usually correct choice — default to this unless another type is clearly \
+better). Use "line" only if the categories represent a clear time/sequence \
+order. Use "pie" only for a small number of categories (<=6) showing \
+parts of a whole (e.g. percentages that sum to 100%).
 """
 
 
