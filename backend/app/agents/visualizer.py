@@ -21,9 +21,18 @@ columns, mixed shapes) is not charted in v1.
 import json
 
 import plotly.graph_objects as go
+import plotly.io as pio
 
 from app.agents.state import AgentState
 from app.services.llm_client import get_llm_client
+
+# Plotly embeds its entire default theme (hundreds of lines of colors/
+# styling for every chart type) into every figure's JSON unless the
+# global default template is disabled. Setting layout.template=None on
+# an individual figure does NOT prevent this — Plotly treats None as
+# "use the current default", not "no template". This module-level
+# setting is the actual fix, and only needs to run once.
+pio.templates.default = "none"
 
 SYSTEM_PROMPT = """You decide whether a computed result should be shown \
 as a chart, and if so, what type. Respond with ONLY a JSON object, no \
@@ -107,6 +116,12 @@ def _build_figure(chart_type: str, title: str, data: dict) -> str:
         trace = go.Bar(x=labels, y=values)
 
     figure = go.Figure(data=[trace], layout={"title": title})
+    # Plotly auto-embeds the full default theme (colorscales, per-trace-type
+    # styling, etc.) into every serialized figure unless explicitly cleared.
+    # That's pure payload bloat here — the frontend's Plotly.js already has
+    # its own default styling, so there's no need to ship this every time.
+    figure.update_layout(template=None)
+
     figure_json = figure.to_json()
     if figure_json is None:
         # Plotly's to_json() is typed as possibly returning None, though a
