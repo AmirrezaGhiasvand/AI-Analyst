@@ -19,6 +19,7 @@ columns, mixed shapes) is not charted in v1.
 """
 
 import json
+from typing import Optional
 
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -49,13 +50,10 @@ parts of a whole (e.g. percentages that sum to 100%).
 
 
 def _is_numeric_field(records: list[dict], key: str) -> bool:
-    return all(
-        isinstance(r.get(key), (int, float)) and not isinstance(r.get(key), bool)
-        for r in records
-    )
+    return all(isinstance(r.get(key), (int, float)) and not isinstance(r.get(key), bool) for r in records)
 
 
-def _extract_chartable_data(result) -> dict | None:
+def _extract_chartable_data(result) -> Optional[dict]:
     """
     Normalizes either supported result shape into one label->value dict,
     or returns None if the result isn't chartable. Doing this narrowing
@@ -63,27 +61,17 @@ def _extract_chartable_data(result) -> dict | None:
     helper) keeps the type checker able to track what `result` actually is.
     """
     if isinstance(result, dict) and len(result) >= 2:
-        if all(
-            isinstance(v, (int, float)) and not isinstance(v, bool)
-            for v in result.values()
-        ):
+        if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in result.values()):
             return result
         return None
 
-    if (
-        isinstance(result, list)
-        and len(result) >= 2
-        and all(isinstance(r, dict) for r in result)
-    ):
+    if isinstance(result, list) and len(result) >= 2 and all(isinstance(r, dict) for r in result):
         keys = set(result[0].keys())
         if len(keys) != 2 or not all(set(r.keys()) == keys for r in result):
             return None
 
         key_a, key_b = tuple(keys)
-        a_numeric, b_numeric = (
-            _is_numeric_field(result, key_a),
-            _is_numeric_field(result, key_b),
-        )
+        a_numeric, b_numeric = _is_numeric_field(result, key_a), _is_numeric_field(result, key_b)
 
         if a_numeric and not b_numeric:
             label_key, value_key = key_b, key_a
@@ -155,13 +143,7 @@ def visualize(state: AgentState) -> dict:
     raw_response = client.chat(messages, temperature=0.1)
 
     try:
-        cleaned = (
-            raw_response.strip()
-            .removeprefix("```json")
-            .removeprefix("```")
-            .removesuffix("```")
-            .strip()
-        )
+        cleaned = raw_response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         decision = json.loads(cleaned)
     except json.JSONDecodeError:
         # If the decision can't be parsed, fail safe into "no chart"
@@ -169,7 +151,9 @@ def visualize(state: AgentState) -> dict:
         # degradation, not a broken response.
         return {"chart_json": None}
 
-    if not decision.get("should_visualize"):
+    if not decision.get("chart_type"):
+        # Malformed/incomplete response — fail safe into no chart rather
+        # than guessing a chart type.
         return {"chart_json": None}
 
     chart_type = decision.get("chart_type") or "bar"

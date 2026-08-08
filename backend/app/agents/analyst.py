@@ -12,7 +12,7 @@ is fed back to the LLM for a second attempt before giving up.
 """
 
 from app.agents.state import AgentState
-from app.sandbox.executor import SandboxExecutionError, execute_code
+from app.sandbox.executor import execute_code, SandboxExecutionError
 from app.services.llm_client import get_llm_client
 
 MAX_CODE_ATTEMPTS = 2
@@ -38,7 +38,13 @@ question and the ACTUAL computed result (real data, not a guess).
 Rules:
 - Base your answer strictly on the given result — do not invent numbers \
 not present in it.
-- Be concise and direct. State the answer first, then brief context if useful.
+- Write in plain prose sentences only. Do NOT use markdown formatting: \
+no tables, no pipe characters, no asterisks for bold/italic, no bullet \
+lists, no headers. The output is displayed as plain text, so markdown \
+syntax would show up as literal stray characters instead of formatting.
+- Be explanatory, not just terse: state the direct answer first, then \
+briefly explain what it means in context — e.g. which value is higher, \
+by how much, or what stands out — in 1-3 sentences total.
 - Do not mention code, pandas, or the fact that code was executed.
 """
 
@@ -62,11 +68,7 @@ def analyze(state: AgentState) -> dict:
     client = get_llm_client()
 
     target = next(
-        (
-            ds
-            for ds in state["dataset_context"]
-            if ds["id"] == state["target_dataset_id"]
-        ),
+        (ds for ds in state["dataset_context"] if ds["id"] == state["target_dataset_id"]),
         None,
     )
     if target is None:
@@ -111,9 +113,7 @@ def analyze(state: AgentState) -> dict:
         code_messages.append({"role": "assistant", "content": raw_code})
 
         try:
-            result = execute_code(
-                generated_code, target["storage_path"], target["file_type"]
-            )
+            result = execute_code(generated_code, target["storage_path"], target["file_type"])
             last_error = None
             break
         except SandboxExecutionError as e:
