@@ -29,7 +29,6 @@ export function ChatInput() {
       <h1 className="text-center text-2xl font-bold text-foreground sm:text-4xl">
         Your AI Data Analyst, ready to analize.
       </h1>
-
       <div className="w-full">
         <div className="relative rounded-xl border border-border bg-card">
           <div className="overflow-y-auto">
