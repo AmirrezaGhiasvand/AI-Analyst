@@ -15,6 +15,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NavMain } from "./nav-main"
+import { useGetProjects } from "@/hooks/query/use-get-projects"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 
 // This is sample data.
 const data = {
@@ -36,6 +39,9 @@ const data = {
 export function ProjectsSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const { data: projects } = useGetProjects()
+  const params = useParams<{ projectId: string }>()
+  const activeProjectId = params.projectId
   return (
     <Sidebar className="border-r-0 pt-2" collapsible="icon" {...props}>
       <SidebarHeader>
@@ -46,14 +52,22 @@ export function ProjectsSidebar({
         <SidebarGroup>
           <SidebarGroupLabel>Projects</SidebarGroupLabel>
           <SidebarGroupContent className="group-data-[collapsible=icon]:hidden">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className="transition-all duration-300"
-                  render={<a href="#">Sample Project</a>}
-                  // isActive={item.isActive}
-                />
-              </SidebarMenuItem>
+            <SidebarMenu className="space-y-2">
+              {projects?.map((project) => {
+                return (
+                  <SidebarMenuItem key={project.id}>
+                    <SidebarMenuButton
+                      className="transition-all duration-300"
+                      render={
+                        <Link href={`/projects/${project.id}`}>
+                          {project.name}
+                        </Link>
+                      }
+                      isActive={project.id === activeProjectId}
+                    />
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

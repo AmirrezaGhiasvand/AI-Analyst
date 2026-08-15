@@ -3,26 +3,85 @@
 import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { ArrowUp, GripVertical, PlusIcon } from "lucide-react"
-import { ComponentProps, CSSProperties } from "react"
+import { ComponentProps, CSSProperties, useState } from "react"
 import useHandleResizeSidebar from "@/hooks/use-handle-resize-sidebar"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-  InputGroupTextarea,
 } from "../ui/input-group"
-import { useAIChat } from "@/hooks/use-ai-chat"
 import ChatEmptyPlaceholder from "./chat-empty-placeholder"
 import AIChatProvider from "./ai-chat-provider"
+import { useSendMessage } from "@/hooks/query/use-send-message"
 
-export function AIChatSidebar({
-  className,
-  ...props
-}: ComponentProps<typeof Sidebar>) {
+type Props = ComponentProps<typeof Sidebar> & {
+  projectId: string
+}
+
+export type ChatMessage = {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  generated_code?: string
+  route?: string
+  execution_result?: string
+  chart?: Record<string, unknown>
+  created_at?: string
+}
+
+export function AIChatSidebar({ projectId, className, ...props }: Props) {
   const { isResizing, handlePointerDown, width } = useHandleResizeSidebar()
-  const { getMessageText, isBusy, messages, nextMessage, sendMessage } =
-    useAIChat()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput] = useState("")
+
+  const sendMessage = useSendMessage(projectId)
+  const isBusy = sendMessage.isPending
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    const message = input.trim()
+
+    if (!message || isBusy) {
+      return
+    }
+
+    // Immediately show the user's message.
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: message,
+      },
+    ])
+
+    setInput("")
+
+    sendMessage.mutate(
+      {
+        question: message,
+      },
+      {
+        onSuccess: (response) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: response.message_id,
+              role: "assistant",
+              content: response.content,
+              generated_code: response.generated_code,
+              route: response.route,
+              execution_result: response.execution_result,
+              chart: response.chart,
+              created_at: response.created_at,
+            },
+          ])
+        },
+      }
+    )
+  }
 
   return (
     <Sidebar
@@ -79,24 +138,14 @@ export function AIChatSidebar({
         <div className="pointer-events-none absolute inset-x-0 -top-12 h-12 bg-linear-to-t from-sidebar to-transparent" />
 
         <div className="relative rounded-xl border border-border bg-card">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!nextMessage || isBusy) {
-                return
-              }
-              void sendMessage(nextMessage)
-            }}
-            className="w-full"
-          >
+          <form onSubmit={handleSubmit} className="w-full">
             <InputGroup>
-              {/* <InputGroupTextarea
-                // value={nextMessage ? getMessageText(nextMessage) : ""}
-                disabled={!nextMessage || isBusy}
-                // readOnly
-                rows={1}
-              /> */}
-              <InputGroupInput />
+              <InputGroupInput
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask the AI..."
+                disabled={isBusy}
+              />
               <InputGroupAddon align="inline-start">
                 <InputGroupButton variant="ghost" size="icon-xs">
                   <PlusIcon className="size-4" />
@@ -108,6 +157,7 @@ export function AIChatSidebar({
                   size="icon-xs"
                   className="ml-auto"
                   type="submit"
+                  disabled={!input.trim() || isBusy}
                 >
                   <ArrowUp className="size-4" />
                 </InputGroupButton>

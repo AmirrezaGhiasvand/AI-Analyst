@@ -1,9 +1,11 @@
+"use client"
 import { Plus_Jakarta_Sans } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toast"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -13,6 +15,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 const fontMono = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-mono",
+})
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnReconnect: "always",
+      refetchOnWindowFocus: false,
+    },
+  },
 })
 
 export default function RootLayout({
@@ -32,8 +43,10 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
-        <Toaster />
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>{children}</ThemeProvider>
+          <Toaster />
+        </QueryClientProvider>
       </body>
     </html>
   )

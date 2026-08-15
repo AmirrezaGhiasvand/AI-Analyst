@@ -1,4 +1,3 @@
-import { UIDataTypes, UIMessage, UITools } from "ai"
 import { Bubble, BubbleContent } from "../ui/bubble"
 import { Message, MessageContent } from "../ui/message"
 import {
@@ -10,10 +9,11 @@ import {
   MessageScrollerButton,
 } from "../ui/message-scroller"
 import { cn } from "@/lib/utils"
+import { ChatMessage } from "./ai-chat-sidebar"
 
 type Props = {
   isBusy: boolean
-  messages: UIMessage<unknown, UIDataTypes, UITools>[]
+  messages: ChatMessage[]
 }
 
 export default function AIChatProvider({ messages, isBusy }: Props) {
@@ -29,7 +29,7 @@ export default function AIChatProvider({ messages, isBusy }: Props) {
                 <MessageScrollerItem
                   key={message.id}
                   messageId={message.id}
-                  scrollAnchor={message.role === "user"}
+                  scrollAnchor={isUser}
                 >
                   <Message align={isUser ? "end" : "start"}>
                     <MessageContent>
@@ -40,11 +40,7 @@ export default function AIChatProvider({ messages, isBusy }: Props) {
                             isUser ? "py-2" : "px-0 py-0"
                           )}
                         >
-                          {message.parts.map((part, i) =>
-                            part.type === "text" ? (
-                              <span key={i}>{part.text}</span>
-                            ) : null
-                          )}
+                          {message.content}
                         </BubbleContent>
                       </Bubble>
                     </MessageContent>

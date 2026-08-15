@@ -1,3 +1,4 @@
+"use client"
 import { ProjectsSidebar } from "@/components/main/projects-sidebar"
 import { AIChatSidebar } from "@/components/main/ai-chat-sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -6,8 +7,19 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useGetProject } from "@/hooks/query/use-get-project"
+import { use } from "react"
 
-export default function Page() {
+type Props = {
+  params: Promise<{
+    projectId: string
+  }>
+}
+
+export default function Page({ params }: Props) {
+  const { projectId } = use(params)
+
+  const { data: project } = useGetProject(projectId)
   return (
     <SidebarProvider>
       <ProjectsSidebar />
@@ -16,14 +28,14 @@ export default function Page() {
           <div className="flex flex-1 items-center gap-2 px-3">
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2" />
-            <span>Sample Project</span>
+            <span>{project?.name}</span>
           </div>
         </header>
         <div className="flex h-[50%] w-full items-center justify-center text-xl">
           Ask the AI to generate some charts.
         </div>
       </SidebarInset>
-      <AIChatSidebar />
+      <AIChatSidebar projectId={projectId} />
     </SidebarProvider>
   )
 }
