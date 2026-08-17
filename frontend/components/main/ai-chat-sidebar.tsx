@@ -2,8 +2,15 @@
 
 import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { ArrowUp, GripVertical, PlusIcon } from "lucide-react"
-import { ComponentProps, CSSProperties, useState } from "react"
+import {
+  ArrowUp,
+  FileSpreadsheet,
+  GripVertical,
+  PlusIcon,
+  X,
+  XIcon,
+} from "lucide-react"
+import { ComponentProps, CSSProperties, useRef, useState } from "react"
 import useHandleResizeSidebar from "@/hooks/use-handle-resize-sidebar"
 import {
   InputGroup,
@@ -14,6 +21,14 @@ import {
 import ChatEmptyPlaceholder from "./chat-empty-placeholder"
 import AIChatProvider from "./ai-chat-provider"
 import { useSendMessage } from "@/hooks/query/use-send-message"
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentMedia,
+  AttachmentTitle,
+} from "../ui/attachment"
 
 type Props = ComponentProps<typeof Sidebar> & {
   projectId: string
@@ -30,10 +45,15 @@ export type ChatMessage = {
   created_at?: string
 }
 
+const DATASET_ACCEPT = ".csv,.xlsx,.xls,.json,.parquet,.tsv"
+
 export function AIChatSidebar({ projectId, className, ...props }: Props) {
   const { isResizing, handlePointerDown, width } = useHandleResizeSidebar()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
+  const [file, setFile] = useState<File | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sendMessage = useSendMessage(projectId)
   const isBusy = sendMessage.isPending
@@ -78,9 +98,27 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
               created_at: response.created_at,
             },
           ])
+          setFile(null)
         },
       }
     )
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = e.target.files?.[0]
+
+    if (!selectedFile) {
+      return
+    }
+
+    setFile(selectedFile)
+
+    // Allow selecting the same file again after removing it.
+    e.target.value = ""
+  }
+
+  function removeFile() {
+    setFile(null)
   }
 
   return (
@@ -139,6 +177,31 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
 
         <div className="relative rounded-xl border border-border bg-card">
           <form onSubmit={handleSubmit} className="w-full">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={DATASET_ACCEPT}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {file && (
+              <Attachment className="w-full">
+                <AttachmentMedia>
+                  <FileSpreadsheet className="size-4 text-muted-foreground" />
+                </AttachmentMedia>
+                <AttachmentContent>
+                  <AttachmentTitle>{file.name}</AttachmentTitle>
+                </AttachmentContent>
+                <AttachmentActions>
+                  <AttachmentAction
+                    aria-label="Remove message-renderer.tsx"
+                    onClick={removeFile}
+                  >
+                    <XIcon />
+                  </AttachmentAction>
+                </AttachmentActions>
+              </Attachment>
+            )}
             <InputGroup>
               <InputGroupInput
                 value={input}
@@ -147,7 +210,14 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
                 disabled={isBusy}
               />
               <InputGroupAddon align="inline-start">
-                <InputGroupButton variant="ghost" size="icon-xs">
+                <InputGroupButton
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className={"cursor-pointer"}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isBusy}
+                >
                   <PlusIcon className="size-4" />
                 </InputGroupButton>
               </InputGroupAddon>

@@ -14,9 +14,9 @@ export default function ChatEmptyPlaceholder() {
         <EmptyMedia variant="icon">
           <MessageCircleDashedIcon />
         </EmptyMedia>
-        <EmptyTitle>Morning, shadcn!</EmptyTitle>
+        <EmptyTitle>Morning, analyst!</EmptyTitle>
         <EmptyDescription>
-          What are we working on today? Press send to start a new conversation
+          Lets have a data driven conversation.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

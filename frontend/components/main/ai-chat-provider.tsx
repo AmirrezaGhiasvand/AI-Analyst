@@ -48,6 +48,23 @@ export default function AIChatProvider({ messages, isBusy }: Props) {
                 </MessageScrollerItem>
               )
             })}
+            {isBusy && (
+              <MessageScrollerItem messageId="loading">
+                <Message align="start">
+                  <MessageContent>
+                    <Bubble variant="ghost">
+                      <BubbleContent className="px-0 py-0">
+                        <div className="flex items-center gap-1 py-2">
+                          <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                          <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                          <span className="size-1.5 animate-bounce rounded-full bg-current" />
+                        </div>
+                      </BubbleContent>
+                    </Bubble>
+                  </MessageContent>
+                </Message>
+              </MessageScrollerItem>
+            )}
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton />

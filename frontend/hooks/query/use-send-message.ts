@@ -20,8 +20,8 @@ type ChatResponse = {
 }
 
 async function sendMessage(
-  projectId: string,
-  request: ChatRequest
+  request: ChatRequest,
+  projectId?: string
 ): Promise<ChatResponse> {
   const { data } = await client.post<ChatResponse>(
     `${endpoints.projects}/${projectId}/chat`,
@@ -31,8 +31,8 @@ async function sendMessage(
   return data
 }
 
-export function useSendMessage(projectId: string) {
+export function useSendMessage(projectId?: string) {
   return useMutation({
-    mutationFn: (request: ChatRequest) => sendMessage(projectId, request),
+    mutationFn: (request: ChatRequest) => sendMessage(request, projectId),
   })
 }

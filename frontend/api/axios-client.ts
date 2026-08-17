@@ -12,6 +12,10 @@ export const client = axios.create({
 client.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    if (error.status === 404) {
+      window.location.replace("/projects")
+      return
+    }
     toast.add({
       id: `error-${error.code}`,
       type: "error",

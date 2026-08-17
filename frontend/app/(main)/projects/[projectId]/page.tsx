@@ -2,11 +2,7 @@
 import { ProjectsSidebar } from "@/components/main/projects-sidebar"
 import { AIChatSidebar } from "@/components/main/ai-chat-sidebar"
 import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useGetProject } from "@/hooks/query/use-get-project"
 import { use } from "react"
 
@@ -20,8 +16,9 @@ export default function Page({ params }: Props) {
   const { projectId } = use(params)
 
   const { data: project } = useGetProject(projectId)
+
   return (
-    <SidebarProvider>
+    <>
       <ProjectsSidebar />
       <SidebarInset>
         <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 bg-background">
@@ -36,6 +33,6 @@ export default function Page({ params }: Props) {
         </div>
       </SidebarInset>
       <AIChatSidebar projectId={projectId} />
-    </SidebarProvider>
+    </>
   )
 }
