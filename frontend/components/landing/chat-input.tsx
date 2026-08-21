@@ -2,23 +2,12 @@
 
 import { useState } from "react"
 import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea"
-import { ArrowUpIcon, Paperclip, PlusIcon } from "lucide-react"
+import { ArrowUpIcon, Paperclip } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useCreateProject } from "@/hooks/query/use-create-project"
-import { useRouter } from "next/navigation"
+
+import NewProjectDialog from "./new-project-dialog"
 
 export function ChatInput() {
   const [value, setValue] = useState("")
@@ -26,12 +15,6 @@ export function ChatInput() {
     minHeight: 60,
     maxHeight: 200,
   })
-  const router = useRouter()
-  const { mutateAsync: createProject } = useCreateProject()
-
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
-  const [projectName, setProjectName] = useState("")
-  const [datasetFile, setDatasetFile] = useState<File | null>(null)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -41,25 +24,6 @@ export function ChatInput() {
         adjustHeight(true)
       }
     }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDatasetFile(e.target.files?.[0] ?? null)
-  }
-
-  const handleCreateProject = async () => {
-    if (!projectName.trim() || !datasetFile) return
-    try {
-      const { project: newProject } = await createProject({
-        project_name: projectName,
-        file: datasetFile,
-      })
-      router.replace(`/projects/${newProject.id}`)
-    } catch {}
-
-    setProjectDialogOpen(false)
-    setProjectName("")
-    setDatasetFile(null)
   }
 
   return (
@@ -111,76 +75,7 @@ export function ChatInput() {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <Dialog
-                open={projectDialogOpen}
-                onOpenChange={setProjectDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    className="flex cursor-pointer items-center justify-between gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-sm transition-colors"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    Project
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Create project</DialogTitle>
-                    <DialogDescription>
-                      Give your project a name and upload a dataset to get
-                      started.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="grid gap-4 py-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="project-name">Project name</Label>
-                      <Input
-                        id="project-name"
-                        placeholder="e.g. Q3 Sales Analysis"
-                        value={projectName}
-                        onChange={(e) => setProjectName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="dataset-file">Dataset file</Label>
-                      <Input
-                        id="dataset-file"
-                        type="file"
-                        accept=".csv,.xlsx,.xls,.json"
-                        onChange={handleFileChange}
-                        className="cursor-pointer"
-                      />
-                      {datasetFile && (
-                        <p className="text-xs text-muted-foreground">
-                          Selected: {datasetFile.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setProjectDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleCreateProject}
-                      disabled={!projectName.trim()}
-                    >
-                      Create project
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <NewProjectDialog />
 
               <button
                 type="button"

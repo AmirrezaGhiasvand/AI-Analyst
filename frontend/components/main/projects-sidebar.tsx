@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Search } from "lucide-react"
+import { Search } from "lucide-react"
 
 import {
   Sidebar,
@@ -27,12 +27,6 @@ const data = {
       url: "#",
       icon: Search,
     },
-    {
-      title: "New Project",
-      url: "#",
-      icon: Plus,
-      badge: "10",
-    },
   ],
 }
 
@@ -45,7 +39,6 @@ export function ProjectsSidebar({
   return (
     <Sidebar className="border-r-0 pt-2" collapsible="icon" {...props}>
       <SidebarHeader>
-        {/* <TeamSwitcher teams={data.teams} /> */}
         <NavMain items={data.navMain} />
       </SidebarHeader>
       <SidebarContent>
