@@ -191,6 +191,7 @@ export default function NewProjectDialog({ sidebar }: { sidebar?: boolean }) {
             type="button"
             variant="outline"
             onClick={() => setProjectDialogOpen(false)}
+            className={"cursor-pointer"}
           >
             Cancel
           </Button>
@@ -198,6 +199,7 @@ export default function NewProjectDialog({ sidebar }: { sidebar?: boolean }) {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
+            className={"cursor-pointer"}
           >
             {isExistingProjectMode ? "Add to project" : "Create project"}
           </Button>

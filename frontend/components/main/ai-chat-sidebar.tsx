@@ -234,7 +234,7 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
                 <InputGroupButton
                   variant="default"
                   size="icon-xs"
-                  className="ml-auto"
+                  className="ml-auto cursor-pointer"
                   type="submit"
                   disabled={!input.trim() || isBusy}
                 >

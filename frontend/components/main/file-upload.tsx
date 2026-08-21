@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useDropzone } from "react-dropzone"
 import { motion } from "motion/react"
-import { Upload } from "lucide-react"
+import { Upload, X } from "lucide-react"
 
 const mainVariant = {
   initial: { x: 0, y: 0 },
@@ -52,6 +52,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (newFiles: File[]) => {
+    // Only allow one file at a time
+    if (files.length > 0) {
+      return
+    }
+
     const valid = newFiles.filter(isDatasetFile)
     const invalid = newFiles.filter((f) => !isDatasetFile(f))
 
@@ -104,7 +109,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onChange }) => {
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
-        onClick={handleClick}
+        onClick={files.length === 0 ? handleClick : undefined}
         whileHover="animate"
         className={cn(
           "group/file relative block w-full overflow-hidden rounded-lg p-6",
@@ -200,10 +205,10 @@ const FileItem: React.FC<FileItemProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           layout
-          className="w-fit shrink-0 cursor-pointer rounded-lg bg-muted px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm"
+          className="w-fit shrink-0 cursor-pointer rounded-lg bg-muted px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm"
           onClick={onRemove}
         >
-          X
+          <X size={15} />
         </motion.p>
       </div>
     </div>
@@ -250,10 +255,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({ isDragActive }) => (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          layout
           className="flex flex-col items-center text-muted-foreground"
         >
           Drop it
-          <Upload size={24} className="h-6 w-6 shrink-0 text-primary" />
+          <Upload size={24} className="mt-2 h-6 w-6 shrink-0 text-primary" />
         </motion.p>
       ) : (
         <Upload size={24} className="h-6 w-6 shrink-0 text-muted-foreground" />
