@@ -1,13 +1,18 @@
 "use client"
 
-import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import {
   ArrowUp,
   FileSpreadsheet,
   GripVertical,
   PlusIcon,
-  X,
   XIcon,
 } from "lucide-react"
 import { ComponentProps, CSSProperties, useRef, useState } from "react"
@@ -125,7 +130,7 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
     <Sidebar
       collapsible="none"
       className={cn(
-        "sticky top-0 hidden h-svh border-l lg:flex",
+        "sticky top-0 hidden h-svh border-r md:flex",
         "relative", // needed so the handle can be absolutely positioned
         className
       )}
@@ -138,10 +143,10 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
         aria-orientation="vertical"
         onPointerDown={handlePointerDown}
         className={cn(
-          "group/handle absolute inset-y-0 inset-s-0 z-20 w-4 -translate-x-1/2",
+          "group/handle absolute inset-y-0 inset-e-0 z-20 w-4 translate-x-1/2",
           "cursor-col-resize touch-none select-none",
           // thin line, only visible on hover/drag
-          "after:absolute after:inset-y-0 after:inset-s-1/2 after:w-px after:-translate-x-1/2",
+          "after:absolute after:inset-y-0 after:inset-e-1/2 after:w-px after:translate-x-1/2",
           "after:bg-transparent hover:after:bg-border",
           isResizing && "after:bg-primary"
         )}
@@ -149,7 +154,7 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
         {/* grip pill, centered vertically */}
         <div
           className={cn(
-            "absolute inset-s-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+            "absolute inset-e-1/2 top-1/2 translate-x-1/2 -translate-y-1/2",
             "flex h-10 w-4 items-center justify-center rounded-full border bg-border",
             "z-50 opacity-0 transition-opacity duration-150",
             "group-hover/handle:opacity-100",
@@ -165,7 +170,11 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
         </div>
       </div>
 
-      <SidebarContent className="h-full py-2 pl-3">
+      <SidebarHeader>
+        <SidebarTrigger />
+      </SidebarHeader>
+
+      <SidebarContent className="h-full px-3 py-2">
         {messages.length === 0 ? (
           <ChatEmptyPlaceholder />
         ) : (

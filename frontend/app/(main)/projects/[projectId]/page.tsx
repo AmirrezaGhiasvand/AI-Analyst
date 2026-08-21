@@ -20,10 +20,12 @@ export default function Page({ params }: Props) {
   return (
     <>
       <ProjectsSidebar />
+      <AIChatSidebar projectId={projectId} />
       <SidebarInset>
         <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 bg-background">
           <div className="flex flex-1 items-center gap-2 px-3">
-            <SidebarTrigger />
+            <span className="hidden font-semibold md:block">AI Analyst</span>
+            <SidebarTrigger className="md:hidden" />
             <Separator orientation="vertical" className="mr-2" />
             <span>{project?.name}</span>
           </div>
@@ -32,7 +34,6 @@ export default function Page({ params }: Props) {
           Ask the AI to generate some charts.
         </div>
       </SidebarInset>
-      <AIChatSidebar projectId={projectId} />
     </>
   )
 }

@@ -18,7 +18,7 @@ export default function useHandleResizeSidebar() {
       const handlePointerMove = (moveEvent: PointerEvent) => {
         // sidebar is on the right (border-l), so dragging the
         // left edge left should grow it, right should shrink it
-        const delta = startX - moveEvent.clientX
+        const delta = moveEvent.clientX - startX
         const next = Math.min(
           MAX_WIDTH,
           Math.max(MIN_WIDTH, startWidth + delta)
