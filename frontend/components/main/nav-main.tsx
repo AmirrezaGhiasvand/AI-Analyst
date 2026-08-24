@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import NewProjectDialog from "../landing/new-project-dialog"
 
 export function NavMain({
   items,
@@ -34,6 +35,9 @@ export function NavMain({
           />
         </SidebarMenuItem>
       ))}
+      <SidebarMenuItem>
+        <NewProjectDialog sidebar />
+      </SidebarMenuItem>
     </SidebarMenu>
   )
 }
