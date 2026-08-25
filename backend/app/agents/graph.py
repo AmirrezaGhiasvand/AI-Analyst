@@ -7,6 +7,8 @@ from app.agents.visualizer import visualize
 
 
 def _route_after_planner(state: AgentState) -> str:
+    """Only 'analyze' needs the Analyst/Visualizer pipeline — both
+    'direct' and 'report' are already fully answered by the Planner."""
     return "analyst" if state["route"] == "analyze" else "__end__"
 
 

@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.agents.graph import agent_graph
 from app.agents.state import AgentState, DatasetContext
+from app.core.config import settings
 from app.models.conversation import Conversation
 from app.models.dataset import Dataset
 from app.models.message import Message
@@ -139,9 +140,17 @@ def ask_question(
     db.commit()
     db.refresh(assistant_message)
 
+    route = result_state.get("route")
+    # The report itself isn't generated here — it's produced on-demand by
+    # the existing report endpoint, which already regenerates fresh from
+    # current DB state on every call. Chat's only job is recognizing the
+    # request and handing back a ready-to-use link.
+    report_url = f"{settings.api_v1_prefix}/projects/{project.id}/report" if route == "report" else None
+
     return {
         "project": project,
         "message": assistant_message,
-        "route": result_state.get("route"),
+        "route": route,
         "execution_result": execution_result,
+        "report_url": report_url,
     }

@@ -35,4 +35,5 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     return ChatResponse.from_message(
         project=result["project"], message=result["message"],
         route=result["route"], execution_result=result["execution_result"],
+        report_url=result["report_url"],
     )

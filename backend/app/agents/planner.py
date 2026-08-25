@@ -9,9 +9,15 @@ Given a user's question and information about their available datasets, \
 decide how to answer it. Respond with ONLY a JSON object, no markdown \
 fences, no explanation outside the JSON, in exactly this shape:
 
-{"route": "direct" or "analyze", "target_dataset_id": "<id or null>", "direct_answer": "<text or null>"}
+{"route": "direct" or "analyze" or "report", "target_dataset_id": "<id or null>", "direct_answer": "<text or null>"}
 
 Rules:
+- Use "report" when the user explicitly asks for a report, summary \
+document, PDF, or export of the analysis (e.g. "generate a report", \
+"can I get a PDF of this", "export this session", "summarize this as a \
+document"). Put a brief, friendly confirmation in "direct_answer" (e.g. \
+"I've prepared your report — you can download it below.") and set \
+"target_dataset_id" to null. Do not use this route for anything else.
 - Use "direct" for anything that does NOT require running code against \
 the actual data. This covers THREE kinds of questions:
   1. Dataset metadata (e.g. "what columns does this have", "how many rows").
@@ -38,6 +44,7 @@ make the best reasonable choice.
 (e.g. "now break that down by region" refers back to the previous answer).
 """
 
+
 def _format_dataset_context(dataset_context: list[DatasetContext]) -> str:
     lines = []
     for ds in dataset_context:
@@ -60,7 +67,7 @@ def plan(state: AgentState) -> dict:
         cleaned = raw_response.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         decision = json.loads(cleaned)
         route = decision.get("route")
-        if route not in ("direct", "analyze"):
+        if route not in ("direct", "analyze", "report"):
             raise ValueError(f"Unexpected route value: {route}")
     except (json.JSONDecodeError, ValueError):
         return {
@@ -68,12 +75,12 @@ def plan(state: AgentState) -> dict:
             "final_answer": "I had trouble understanding how to approach that question. Could you rephrase it?",
         }
 
-    if route == "direct":
+    if route in ("direct", "report"):
         fallback = (
             "I'm not sure how to answer that directly — try asking about "
             "your data, like requesting an average, a breakdown by category, "
             "or a comparison across columns."
         )
-        return {"route": "direct", "target_dataset_id": None, "final_answer": decision.get("direct_answer") or fallback}
+        return {"route": route, "target_dataset_id": None, "final_answer": decision.get("direct_answer") or fallback}
     else:
         return {"route": "analyze", "target_dataset_id": decision.get("target_dataset_id")}
