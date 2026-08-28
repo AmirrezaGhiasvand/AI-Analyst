@@ -78,7 +78,7 @@ export function DynamicChart({ spec }: { spec: ChartSpec }) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="min-h-[200px] w-full">
+        <ChartContainer config={config} className="h-[300px] w-full">
           {chart_type === "bar" ? (
             <BarChart accessibilityLayer data={cleanedData}>
               <CartesianGrid vertical={false} />
