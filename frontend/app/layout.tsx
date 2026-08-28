@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toast"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ChatProvider } from "@/context/chat-store"
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -44,7 +45,9 @@ export default function RootLayout({
     >
       <body>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <ChatProvider>{children}</ChatProvider>
+          </ThemeProvider>
           <Toaster />
         </QueryClientProvider>
       </body>

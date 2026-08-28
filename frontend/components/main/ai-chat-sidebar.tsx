@@ -25,7 +25,6 @@ import {
 } from "../ui/input-group"
 import ChatEmptyPlaceholder from "./chat-empty-placeholder"
 import AIChatProvider from "./ai-chat-provider"
-import { useSendMessage } from "@/hooks/query/use-send-message"
 import {
   Attachment,
   AttachmentAction,
@@ -34,6 +33,7 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from "../ui/attachment"
+import { useChat } from "@/context/chat-store"
 
 type Props = ComponentProps<typeof Sidebar> & {
   projectId: string
@@ -54,14 +54,12 @@ const DATASET_ACCEPT = ".csv,.xlsx,.xls,.json,.parquet,.tsv"
 
 export function AIChatSidebar({ projectId, className, ...props }: Props) {
   const { isResizing, handlePointerDown, width } = useHandleResizeSidebar()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [file, setFile] = useState<File | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sendMessage = useSendMessage(projectId)
-  const isBusy = sendMessage.isPending
+  const { messages, isBusy, sendMessage } = useChat()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -72,41 +70,9 @@ export function AIChatSidebar({ projectId, className, ...props }: Props) {
       return
     }
 
-    // Immediately show the user's message.
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        role: "user",
-        content: message,
-      },
-    ])
-
+    sendMessage(message, projectId)
     setInput("")
-
-    sendMessage.mutate(
-      {
-        question: message,
-      },
-      {
-        onSuccess: (response) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: response.message_id,
-              role: "assistant",
-              content: response.content,
-              generated_code: response.generated_code,
-              route: response.route,
-              execution_result: response.execution_result,
-              chart: response.chart,
-              created_at: response.created_at,
-            },
-          ])
-          setFile(null)
-        },
-      }
-    )
+    setFile(null)
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
