@@ -1,13 +1,7 @@
 // components/main/chat-store.tsx
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 import { useSendMessage } from "@/hooks/query/use-send-message"
 import { deriveProjectName } from "@/lib/utils"
 
@@ -40,8 +34,8 @@ const ChatContext = createContext<ChatContextValue | null>(null)
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null)
   const sendMessageMutation = useSendMessage()
-  const lastSentProjectId = useRef<string | null>(null)
 
   async function sendMessage(question: string, projectId?: string) {
     setMessages((prev) => [
@@ -54,6 +48,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       project_id: projectId,
       ...(projectId ? {} : { project_name: deriveProjectName(question) }), // generate project name when there is no project id
     })
+
+    const resolvedProjectId = projectId ?? response.project.id
 
     setMessages((prev) => [
       ...prev,
@@ -69,19 +65,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       },
     ])
 
-    lastSentProjectId.current = projectId ?? response.project.id
+    setCurrentProjectId(resolvedProjectId)
 
     return response
   }
 
   function resetMessages(projectId: string) {
-    if (lastSentProjectId.current === projectId) {
-      // this project's messages are the ones we just sent — keep them,
-      // but consume the marker so a future revisit resets normally
-      lastSentProjectId.current = null
+    // idempotent: safe to call more than once with the same projectId
+    // (e.g. React Strict Mode double-invoking effects in dev)
+    if (currentProjectId === projectId) {
       return
     }
     setMessages([])
+    setCurrentProjectId(projectId)
   }
 
   return (
