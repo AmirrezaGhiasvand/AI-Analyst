@@ -145,9 +145,9 @@ export function ChatInput() {
                 type="button"
                 onClick={handleSubmit}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between gap-1 rounded-lg border border-border px-1.5 py-1.5 text-sm transition-colors disabled:cursor-default",
-                  value.trim() || !isSubmitting
-                    ? "bg-white text-black"
+                  "flex cursor-pointer items-center justify-between gap-1 rounded-lg border px-1.5 py-1.5 text-sm transition-colors disabled:cursor-default disabled:opacity-50",
+                  value.trim() || isSubmitting
+                    ? "border-primary bg-primary"
                     : "text-zinc-400"
                 )}
                 disabled={!value.trim() || isSubmitting}
@@ -155,7 +155,9 @@ export function ChatInput() {
                 <ArrowUpIcon
                   className={cn(
                     "h-4 w-4",
-                    value.trim() ? "text-black" : "text-zinc-400"
+                    value.trim() || isSubmitting
+                      ? "text-primary-foreground"
+                      : "text-zinc-400"
                   )}
                 />
                 <span className="sr-only">Send</span>
