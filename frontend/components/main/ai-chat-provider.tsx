@@ -49,7 +49,7 @@ export default function AIChatProvider({ messages, isBusy }: Props) {
               )
             })}
             {isBusy && (
-              <MessageScrollerItem messageId="loading">
+              <MessageScrollerItem messageId="loading" key={"loading"}>
                 <Message align="start">
                   <MessageContent>
                     <Bubble variant="ghost">
