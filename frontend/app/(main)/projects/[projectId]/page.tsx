@@ -4,7 +4,9 @@ import { AIChatSidebar } from "@/components/main/ai-chat-sidebar"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useGetProject } from "@/hooks/query/use-get-project"
-import { use } from "react"
+import { use, useEffect } from "react"
+import { ChartsPanel } from "@/components/main/charts-panel"
+import { useChat } from "@/context/chat-store"
 
 type Props = {
   params: Promise<{
@@ -16,6 +18,12 @@ export default function Page({ params }: Props) {
   const { projectId } = use(params)
 
   const { data: project } = useGetProject(projectId)
+
+  const { resetMessages } = useChat()
+
+  useEffect(() => {
+    resetMessages(projectId)
+  }, [projectId])
 
   return (
     <>
@@ -30,9 +38,7 @@ export default function Page({ params }: Props) {
             <span>{project?.name}</span>
           </div>
         </header>
-        <div className="flex h-[50%] w-full items-center justify-center text-xl">
-          Ask the AI to generate some charts.
-        </div>
+        <ChartsPanel />
       </SidebarInset>
     </>
   )

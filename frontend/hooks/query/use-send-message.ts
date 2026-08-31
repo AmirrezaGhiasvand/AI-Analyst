@@ -6,33 +6,33 @@ import { useMutation } from "@tanstack/react-query"
 
 type ChatRequest = {
   question: string
+  project_id?: string
+  project_name?: string
 }
 
-type ChatResponse = {
-  message_id: string
-  role: string
+export type ChatResponse = {
+  project: {
+    id: string
+    name: string
+  }
+  id: string
+  role: "user" | "assistant"
   content: string
-  generated_code: string
-  route: string
-  execution_result: string
-  chart: Record<string, unknown>
-  created_at: string
+  generated_code?: string
+  route?: string
+  execution_result?: string
+  chart?: Record<string, unknown>
+  created_at?: string
 }
 
-async function sendMessage(
-  request: ChatRequest,
-  projectId?: string
-): Promise<ChatResponse> {
-  const { data } = await client.post<ChatResponse>(
-    `${endpoints.projects}/${projectId}/chat`,
-    request
-  )
+async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
+  const { data } = await client.post<ChatResponse>(`${endpoints.chat}`, request)
 
   return data
 }
 
-export function useSendMessage(projectId?: string) {
+export function useSendMessage() {
   return useMutation({
-    mutationFn: (request: ChatRequest) => sendMessage(request, projectId),
+    mutationFn: (request: ChatRequest) => sendMessage(request),
   })
 }
